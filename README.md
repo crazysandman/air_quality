@@ -4,18 +4,12 @@
 
 Dieses Projekt kombiniert eine Android-App mit einer Python-basierten REST-API und einer räumlich erweiterten PostgreSQL/PostGIS-Datenbank, um offene IoT-Daten zur Luftqualität (z. B. von Sensor.Community) interaktiv auf einer Karte anzuzeigen.
 
-## 🔧 Projektstruktur
+# Datenquelle
 
-- **/backend/** – FastAPI-Backend mit Datenabruf, -speicherung und API-Endpunkten
-- **/android/** – Android-App (Kotlin) mit Mapbox SDK und Retrofit
-- **docker-compose.yml** – Docker-Konfiguration für PostgreSQL/PostGIS
+Sensor.Community API
 
 
-
-
-
-
-## Technologien:
+# Technologien:
 
 Python (FastAPI, SQLAlchemy, GeoAlchemy)
 PostgreSQL + PostGIS
