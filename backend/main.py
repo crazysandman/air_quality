@@ -82,7 +82,7 @@ def health_check():
     try:
         # Check database connection
         db = database.get_db_session()
-        db.execute("SELECT 1")
+        result = db.execute("SELECT 1").fetchone()
         db_status = "connected"
         db.close()
     except Exception as e:
