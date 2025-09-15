@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import de.project.air_quality_app.ui.theme.AirQualityAppTheme
+import androidx.compose.material3.MaterialTheme
 import de.project.air_quality_app.viewmodel.AirQualityViewModel
 import com.mapbox.geojson.Point
 import com.mapbox.maps.*
@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AirQualityAppTheme {
+            MaterialTheme {
                 AirQualityMapScreen()
             }
         }
@@ -146,7 +146,7 @@ fun AirQualityMapScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = uiState.errorMessage,
+                        text = uiState.errorMessage ?: "Unknown error",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White
                     )
