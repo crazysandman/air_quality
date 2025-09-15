@@ -1,5 +1,5 @@
 import requests
-from . import schemas, crud
+import schemas, crud
 from sqlalchemy.orm import Session
 from datetime import datetime
 import os

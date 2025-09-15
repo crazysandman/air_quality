@@ -3,7 +3,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func, text, desc
 from datetime import datetime, timedelta
-from . import models, schemas
+import models
+import schemas
 
 # Neue Messung speichern
 def insert_sensor_data(db: Session, data: schemas.SensorDataBase):
