@@ -7,11 +7,21 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
 
-from database import get_db_session
-from data_sources import get_data_source_manager
-from crud import bulk_insert_station_data, cleanup_old_station_data, upsert_station_data
-from models import StationData
-from schemas import StationDataBase
+# Use relative imports for package structure
+try:
+    # When run as module (uvicorn backend.main:app)
+    from .database import get_db_session
+    from .data_sources import get_data_source_manager
+    from .crud import bulk_insert_station_data, cleanup_old_station_data, upsert_station_data
+    from .models import StationData
+    from .schemas import StationDataBase
+except ImportError:
+    # Fallback for direct execution (development)
+    from database import get_db_session
+    from data_sources import get_data_source_manager
+    from crud import bulk_insert_station_data, cleanup_old_station_data, upsert_station_data
+    from models import StationData
+    from schemas import StationDataBase
 
 # Logging Setup
 logging.basicConfig(level=logging.INFO)

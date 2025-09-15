@@ -1,10 +1,21 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-import database, schemas, crud
-import waqi_stations
-from models import Base
-from scheduler import scheduler_instance
+
+# Use relative imports for package structure (Railway deployment)
+try:
+    # When run as module (uvicorn backend.main:app)
+    from . import database, schemas, crud, waqi_stations
+    from .models import Base
+    from .scheduler import scheduler_instance
+except ImportError:
+    # Fallback for direct execution (development)
+    import database
+    import schemas  
+    import crud
+    import waqi_stations
+    from models import Base
+    from scheduler import scheduler_instance
 import asyncio
 import os
 from datetime import datetime

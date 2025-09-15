@@ -34,7 +34,13 @@ class WAQIDataSource(AirQualityDataSource):
     """World Air Quality Index data source"""
     
     def __init__(self):
-        from waqi_stations import fetch_berlin_stations_detailed
+        # Use relative imports for package structure
+        try:
+            # When run as module (uvicorn backend.main:app)
+            from .waqi_stations import fetch_berlin_stations_detailed
+        except ImportError:
+            # Fallback for direct execution (development)
+            from waqi_stations import fetch_berlin_stations_detailed
         self.fetch_function = fetch_berlin_stations_detailed
     
     def get_station_data(self, region: str = "berlin") -> List[Dict[str, Any]]:
