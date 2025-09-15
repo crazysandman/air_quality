@@ -3,8 +3,15 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func, text, desc
 from datetime import datetime, timedelta
-import models
-import schemas
+
+# Use relative imports for package structure
+try:
+    # When run as module (uvicorn backend.main:app)
+    from . import models, schemas
+except ImportError:
+    # Fallback for direct execution (development)
+    import models
+    import schemas
 
 # Neue Messung speichern
 def insert_sensor_data(db: Session, data: schemas.SensorDataBase):

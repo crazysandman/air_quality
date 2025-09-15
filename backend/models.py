@@ -1,9 +1,13 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, JSON
-from database import Base
-from sqlalchemy.ext.declarative import declarative_base
 import datetime
 
-Base = declarative_base()
+# Use relative imports for package structure
+try:
+    # When run as module (uvicorn backend.main:app)
+    from .database import Base
+except ImportError:
+    # Fallback for direct execution (development)
+    from database import Base
 
 class SensorData(Base):
     __tablename__ = "sensor_data"
