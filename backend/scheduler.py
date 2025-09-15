@@ -124,18 +124,18 @@ class AirQualityScheduler:
             logger.error(f"Fehler bei stündlicher Aktualisierung: {e}")
     
     def start_scheduler(self):
-        """Startet den Scheduler für stündliche Updates"""
+        """Startet den Scheduler für regelmäßige Updates"""
         if self.is_running:
             logger.info("Scheduler läuft bereits")
             return
         
-        # Job für stündliche Aktualisierung hinzufügen
-        # Läuft jede Stunde zur vollen Stunde
+        # Job für häufigere Aktualisierung hinzufügen (alle 30 Minuten)
+        # Das macht es robuster gegen Container-Neustarts
         self.scheduler.add_job(
             self.update_berlin_stations,
-            trigger=CronTrigger(minute=0),  # Jede Stunde zur vollen Stunde
+            trigger=CronTrigger(minute="0,30"),  # Alle 30 Minuten (zur vollen und halben Stunde)
             id="berlin_stations_update",
-            name="Berlin Stations Hourly Update",
+            name="Berlin Stations Update (every 30min)",
             replace_existing=True
         )
         
@@ -148,9 +148,18 @@ class AirQualityScheduler:
             replace_existing=True
         )
         
+        # Keep-alive job für Railway (verhindert Container Sleep)
+        self.scheduler.add_job(
+            self.keep_alive_task,
+            trigger=CronTrigger(minute="*/10"),  # Alle 10 Minuten
+            id="keep_alive",
+            name="Keep Alive Task",
+            replace_existing=True
+        )
+        
         self.scheduler.start()
         self.is_running = True
-        logger.info("Air Quality Scheduler gestartet - stündliche Updates aktiviert")
+        logger.info("Air Quality Scheduler gestartet - Updates alle 30 Minuten aktiviert")
     
     async def cleanup_task(self):
         """Tägliche Aufräumarbeiten in der Datenbank"""
@@ -164,6 +173,16 @@ class AirQualityScheduler:
                 db.close()
         except Exception as e:
             logger.error(f"Fehler bei täglicher Bereinigung: {e}")
+    
+    async def keep_alive_task(self):
+        """Keep-alive task to prevent Railway container from sleeping"""
+        try:
+            logger.info("Keep-alive ping")
+            # Simple task to keep the container active
+            current_time = datetime.now()
+            logger.info(f"Container active at {current_time.isoformat()}")
+        except Exception as e:
+            logger.error(f"Keep-alive task error: {e}")
     
     def stop_scheduler(self):
         """Stoppt den Scheduler"""
