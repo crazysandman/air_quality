@@ -8,8 +8,8 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
 
 from database import get_db_session
-from waqi_stations import fetch_berlin_stations_detailed
-from crud import bulk_insert_station_data, cleanup_old_station_data
+from data_sources import get_data_source_manager
+from crud import bulk_insert_station_data, cleanup_old_station_data, upsert_station_data
 from models import StationData
 from schemas import StationDataBase
 
@@ -27,18 +27,24 @@ class AirQualityScheduler:
         try:
             logger.info("Starte stündliche Aktualisierung der Berlin Stationen...")
             
-            # Hole aktuelle Stationsdaten von WAQI API (synchron)
+            # Hole aktuelle Stationsdaten von allen aktiven Datenquellen
             import asyncio
             loop = asyncio.get_event_loop()
-            stations_data = await loop.run_in_executor(None, fetch_berlin_stations_detailed)
             
-            if not stations_data:
+            # Use data source manager to get WAQI data
+            data_manager = get_data_source_manager()
+            waqi_features = await loop.run_in_executor(
+                None, 
+                lambda: data_manager.sources['waqi'].get_station_data('berlin')
+            )
+            
+            if not waqi_features:
                 logger.warning("Keine Stationsdaten von WAQI API erhalten")
                 return
             
             # Konvertiere zu Pydantic Schema
             station_records = []
-            features = stations_data.get("features", [])
+            features = waqi_features  # Direct list of features from data source
             for station in features:
                 try:
                     # Extrahiere Daten aus dem GeoJSON Format
@@ -87,16 +93,16 @@ class AirQualityScheduler:
                 logger.warning("Keine gültigen Stationsdaten für Datenbank konvertiert")
                 return
             
-            # Speichere in Datenbank
+            # UPSERT in Datenbank (Update existing, Insert new)
             db = get_db_session()
             try:
-                saved_records = bulk_insert_station_data(db, station_records)
-                logger.info(f"Erfolgreich {len(saved_records)} Stationen in Datenbank gespeichert")
+                saved_records = upsert_station_data(db, station_records)
+                logger.info(f"Erfolgreich {len(saved_records)} Stationen aktualisiert/eingefügt")
                 
-                # Cleanup alter Daten (älter als 7 Tage)
-                deleted_count = cleanup_old_station_data(db, days_to_keep=7)
-                if deleted_count > 0:
-                    logger.info(f"{deleted_count} alte Datensätze gelöscht")
+                # Note: Cleanup nicht mehr nötig da wir nur 16 Records haben
+                # deleted_count = cleanup_old_station_data(db, days_to_keep=7)
+                # if deleted_count > 0:
+                #     logger.info(f"{deleted_count} alte Datensätze gelöscht")
                     
             except Exception as e:
                 logger.error(f"Datenbankfehler: {e}")
