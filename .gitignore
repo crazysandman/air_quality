@@ -172,3 +172,27 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Project specific
+*.db
+*.sqlite
+*.sqlite3
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+
+# Android Studio
+air_quality_app_android/.gradle/
+air_quality_app_android/build/
+air_quality_app_android/app/build/
+air_quality_app_android/.idea/
+air_quality_app_android/local.properties
+
+# Railway
+.railway/

@@ -30,7 +30,7 @@ fun MapViewScreen() {
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
-            val mapInitOptions = MapInitOptions(context, styleUri = "mapbox://styles/mapbox/streets-v12")
+            val mapInitOptions = MapInitOptions(context, styleUri = "mapbox://styles/mapbox/dark-v10")
             MapView(context, mapInitOptions).apply {
                 this.mapboxMap.setCamera(
                     CameraOptions.Builder()
