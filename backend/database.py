@@ -1,7 +1,14 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from config import DATABASE_URL
+
+# Use relative imports for package structure
+try:
+    # When run as module (uvicorn backend.main:app)
+    from .config import DATABASE_URL
+except ImportError:
+    # Fallback for direct execution (development)
+    from config import DATABASE_URL
 
 # Create declarative base
 Base = declarative_base()
