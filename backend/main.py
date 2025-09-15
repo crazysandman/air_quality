@@ -71,7 +71,7 @@ async def shutdown_event():
 # ----------------------------------------
 @app.get("/")
 def root():
-    return {"message": "WAQI Backend is running"}
+    return {"message": "WAQI Backend is running", "status": "healthy", "version": "1.0.1"}
 
 # ----------------------------------------
 # Health Check Endpoint (für Keep-Alive)
