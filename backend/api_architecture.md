@@ -1,7 +1,29 @@
 # backend/api_architecture.md
 
-# Air Quality API Architecture
+# Air Quality API Archite### Current Production Status 🚀
+- **Railway Deployment**: ✅ Live at `air-quality-production-a67b.up.railway.app`
+- **Supabase Database**: ✅ 16 unique Berlin stations, UPSERT working perfectly
+- **Data Source Manager**: ✅ WAQI active, OpenAQ/UBA ready for activation
+- **Hourly Updates**: ✅ Scheduler running, no duplicate records
+- **Next APIs**: Ready to activate with `data_manager.activate_source('openaq')`
 
+### Available API Endpoints 🌐
+```
+GET /health                    - Health check
+GET /stations/latest          - Latest data from all stations
+GET /stations/region/berlin   - Berlin-specific station data
+GET /scheduler/status         - Scheduler status and next run times
+POST /scheduler/run           - Manual trigger for data collection
+```
+
+### Quick API Test:
+```bash
+# Check current station data
+curl https://air-quality-production-a67b.up.railway.app/stations/latest
+
+# Verify scheduler status  
+curl https://air-quality-production-a67b.up.railway.app/scheduler/status
+```
 ## Database Design for Multiple Data Sources
 
 ### Current Status ✅
@@ -45,10 +67,18 @@ UBA123     | uba_api   | berlin | Berlin-Mitte           | 18  | 15.0
 OAQ456     | openaq_api| munich | München-Zentrum        | 25  | 22.0
 ```
 
-### Implementation Steps:
+### Implementation Status:
 1. ✅ Clean up old files and unused code
-2. ✅ Keep current WAQI system working
-3. 🔄 Add data source abstraction layer
-4. 🔄 Update scheduler for multiple sources
-5. 🔄 Add new API endpoints for source filtering
-6. 🔄 Remove legacy sensor_data table
+2. ✅ Keep current WAQI system working  
+3. ✅ **COMPLETED**: Data source abstraction layer (`data_sources.py`)
+4. ✅ **COMPLETED**: Scheduler updated for unified data source manager
+5. ✅ **COMPLETED**: UPSERT system maintaining exactly 16 stations
+6. 🔄 **TODO**: Remove legacy sensor_data table and endpoints
+7. 🔄 **TODO**: Add new API endpoints for source filtering
+
+### Current Production Status �
+- **Railway Deployment**: ✅ Live at `air-quality-production-a67b.up.railway.app`
+- **Supabase Database**: ✅ 16 unique Berlin stations, UPSERT working perfectly
+- **Data Source Manager**: ✅ WAQI active, OpenAQ/UBA ready for activation
+- **Hourly Updates**: ✅ Scheduler running, no duplicate records
+- **Next APIs**: Ready to activate with `data_manager.activate_source('openaq')`
