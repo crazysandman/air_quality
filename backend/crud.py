@@ -50,6 +50,42 @@ def bulk_insert_station_data(db: Session, station_data_list: list[schemas.Statio
     
     return db_items
 
+def upsert_station_data(db: Session, station_data_list: list[schemas.StationDataBase]):
+    """
+    UPSERT: Update existing stations or insert new ones
+    Keeps only 16 current stations (one per station_uid)
+    """
+    current_time = datetime.utcnow()
+    updated_stations = []
+    
+    for data in station_data_list:
+        # Check if station already exists
+        existing_station = db.query(models.StationData).filter(
+            models.StationData.station_uid == data.station_uid
+        ).first()
+        
+        if existing_station:
+            # UPDATE existing record
+            for field, value in data.dict().items():
+                if field != 'station_uid':  # Don't update UID
+                    setattr(existing_station, field, value)
+            existing_station.last_update = current_time
+            updated_stations.append(existing_station)
+        else:
+            # INSERT new record
+            db_item = models.StationData(**data.dict())
+            db_item.last_update = current_time
+            db.add(db_item)
+            updated_stations.append(db_item)
+    
+    db.commit()
+    
+    # Refresh all items
+    for item in updated_stations:
+        db.refresh(item)
+    
+    return updated_stations
+
 def get_latest_station_data(db: Session, limit: int = None):
     """Holt die neuesten Daten für alle Stationen"""
     query = db.query(models.StationData).order_by(desc(models.StationData.last_update))
