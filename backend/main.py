@@ -5,7 +5,6 @@ import database, waqi_service, schemas, crud
 import waqi_stations
 from models import Base
 from scheduler import scheduler_instance
-from keep_alive import get_keep_alive_service
 import asyncio
 import os
 from datetime import datetime
@@ -36,11 +35,8 @@ async def startup_event():
         scheduler_instance.start_scheduler()
         print("Air Quality Scheduler started for hourly station updates")
         
-        # Start keep-alive service for Railway
-        if os.getenv("RAILWAY_ENVIRONMENT_NAME"):  # Only on Railway
-            keep_alive = get_keep_alive_service()
-            asyncio.create_task(keep_alive.start_keep_alive())
-            print("Railway Keep-Alive service started")
+        # Note: Keep-alive temporarily disabled for deployment debugging
+        print("System ready - Railway will manage service lifecycle")
         
     except Exception as e:
         print(f"Warning: Could not create database tables: {e}")
@@ -52,11 +48,6 @@ async def shutdown_event():
     try:
         scheduler_instance.stop_scheduler()
         print("Air Quality Scheduler stopped")
-        
-        # Stop keep-alive service
-        keep_alive = get_keep_alive_service()
-        keep_alive.stop_keep_alive()
-        print("Keep-Alive service stopped")
         
     except Exception as e:
         print(f"Warning: Error stopping services: {e}")
