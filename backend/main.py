@@ -120,6 +120,19 @@ def get_berlin_stations_from_db(db: Session = Depends(database.get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/stations/berlin/fresh")
+async def get_fresh_berlin_stations(db: Session = Depends(database.get_db)):
+    """Get fresh Berlin station data - updates database first, then returns latest data"""
+    try:
+        # First trigger an update to ensure we have the latest data
+        await scheduler_instance.update_berlin_stations()
+        
+        # Then return the fresh data from database
+        stations = crud.get_latest_station_data_by_region(db, "Berlin")
+        return {"stations": stations, "count": len(stations), "region": "Berlin", "fresh": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/scheduler/run")
 async def trigger_manual_update():
     """Manually trigger a station data update"""
