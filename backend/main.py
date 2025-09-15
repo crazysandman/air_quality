@@ -1,10 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from . import database, waqi_service, schemas, crud
-from . import waqi_stations
-from .models import Base
-from .scheduler import scheduler_instance
+import database, waqi_service, schemas, crud
+import waqi_stations
+from models import Base
+from scheduler import scheduler_instance
+from keep_alive import get_keep_alive_service
+import asyncio
+import os
+from datetime import datetime
 
 app = FastAPI()
 
@@ -32,6 +36,12 @@ async def startup_event():
         scheduler_instance.start_scheduler()
         print("Air Quality Scheduler started for hourly station updates")
         
+        # Start keep-alive service for Railway
+        if os.getenv("RAILWAY_ENVIRONMENT_NAME"):  # Only on Railway
+            keep_alive = get_keep_alive_service()
+            asyncio.create_task(keep_alive.start_keep_alive())
+            print("Railway Keep-Alive service started")
+        
     except Exception as e:
         print(f"Warning: Could not create database tables: {e}")
         print("API will still work for endpoints that don't require database")
@@ -42,8 +52,14 @@ async def shutdown_event():
     try:
         scheduler_instance.stop_scheduler()
         print("Air Quality Scheduler stopped")
+        
+        # Stop keep-alive service
+        keep_alive = get_keep_alive_service()
+        keep_alive.stop_keep_alive()
+        print("Keep-Alive service stopped")
+        
     except Exception as e:
-        print(f"Warning: Error stopping scheduler: {e}")
+        print(f"Warning: Error stopping services: {e}")
 
 # Use the database module's get_db function directly
 # (removing duplicate definition)
@@ -54,6 +70,32 @@ async def shutdown_event():
 @app.get("/")
 def root():
     return {"message": "WAQI Backend is running"}
+
+# ----------------------------------------
+# Health Check Endpoint (für Keep-Alive)
+# ----------------------------------------
+@app.get("/health")
+def health_check():
+    """Health check endpoint for monitoring and keep-alive"""
+    try:
+        # Check database connection
+        db = database.get_db_session()
+        db.execute("SELECT 1")
+        db_status = "connected"
+        db.close()
+    except Exception as e:
+        db_status = f"error: {str(e)[:50]}"
+    
+    # Check scheduler status
+    scheduler_status = "running" if scheduler_instance.scheduler.running else "stopped"
+    
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "database": db_status,
+        "scheduler": scheduler_status,
+        "environment": os.getenv("RAILWAY_ENVIRONMENT_NAME", "local")
+    }
 
 # ----------------------------------------
 # Berlin Stations Endpoint (MUST be before /waqi/{city})

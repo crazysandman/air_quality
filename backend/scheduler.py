@@ -7,10 +7,11 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
 
-from .database import get_db_session
-from .waqi_stations import fetch_berlin_stations_detailed
-from .crud import bulk_insert_station_data, cleanup_old_station_data
-from .schemas import StationDataBase
+from database import get_db_session
+from waqi_stations import fetch_berlin_stations_detailed
+from crud import bulk_insert_station_data, cleanup_old_station_data
+from models import StationData
+from schemas import StationDataBase
 
 # Logging Setup
 logging.basicConfig(level=logging.INFO)
@@ -37,7 +38,8 @@ class AirQualityScheduler:
             
             # Konvertiere zu Pydantic Schema
             station_records = []
-            for station in stations_data:
+            features = stations_data.get("features", [])
+            for station in features:
                 try:
                     # Extrahiere Daten aus dem GeoJSON Format
                     properties = station.get("properties", {})

@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from .config import DATABASE_URL
+from config import DATABASE_URL
 
 # Create declarative base
 Base = declarative_base()
@@ -17,17 +17,26 @@ def initialize_database():
         return engine
     
     try:
-        # Try PostgreSQL first with very short timeout
+        # Try PostgreSQL first with Railway-optimized settings
+        print(f"Attempting PostgreSQL connection to: {DATABASE_URL[:50]}...")
         engine = create_engine(
             DATABASE_URL, 
-            connect_args={"connect_timeout": 2}, 
-            pool_timeout=1, 
-            pool_pre_ping=True
+            connect_args={
+                "connect_timeout": 10,
+                "sslmode": "require",
+                "target_session_attrs": "read-write"
+            }, 
+            pool_timeout=5,
+            pool_pre_ping=True,
+            pool_recycle=3600,  # Recycle connections after 1 hour
+            echo=False  # Set to True for SQL debugging
         )
-        # Test the connection with timeout
+        # Test the connection
         with engine.connect() as conn:
-            result = conn.execute(text("SELECT 1"))
-            print("PostgreSQL connection successful!")
+            result = conn.execute(text("SELECT version()"))
+            version = result.fetchone()[0]
+            print(f"✅ PostgreSQL connection successful!")
+            print(f"Database version: {version[:50]}...")
     except Exception as e:
         print(f"PostgreSQL connection failed: {e}")
         print("Falling back to SQLite for local development")
