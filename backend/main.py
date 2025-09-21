@@ -1,3 +1,16 @@
+"""
+Air Quality API Backend
+======================
+
+Main FastAPI application for the Air Quality monitoring system.
+This module provides REST API endpoints for retrieving air quality data
+from various monitoring stations in Berlin.
+
+Author: Master's Student Project
+Architecture: FastAPI + SQLAlchemy + PostgreSQL (Supabase)
+External APIs: World Air Quality Index (WAQI) API
+"""
+
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,34 +33,44 @@ import asyncio
 import os
 from datetime import datetime
 
-app = FastAPI()
+# FastAPI Application Instance
+app = FastAPI(
+    title="Air Quality API",
+    description="REST API for Berlin Air Quality monitoring stations",
+    version="1.0.0"
+)
 
-# CORS-Konfiguration (für deine Android-App)
+# CORS Configuration - Allow cross-origin requests from Android app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # oder spezifische Domain z. B. ["http://192.168.0.12:8000"]
+    allow_origins=["*"],  # Production: Replace with specific Android app domain
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
 @app.on_event("startup")
 async def startup_event():
-    """Create database tables on startup"""
+    """
+    Application startup event handler.
+    
+    Initializes database connection, creates tables if they don't exist,
+    and starts the background scheduler for automatic data updates.
+    """
     try:
-        # Initialize database connection
+        # Initialize database connection (PostgreSQL via Supabase or SQLite fallback)
         engine = database.initialize_database()
         
-        # Create database tables (should work with SQLite fallback)
+        # Create database tables using SQLAlchemy ORM models
         Base.metadata.create_all(bind=engine)
-        print("Database tables created successfully")
+        print("✅ Database tables created successfully")
         
-        # Start the scheduler for hourly updates
+        # Start background scheduler for hourly WAQI API data updates
         scheduler_instance.start_scheduler()
-        print("Air Quality Scheduler started for hourly station updates")
+        print("✅ Background scheduler started - hourly station updates enabled")
         
-        # Note: Keep-alive temporarily disabled for deployment debugging
-        print("System ready - Railway will manage service lifecycle")
+        # Service is ready for requests
+        print("🚀 Air Quality API service ready")
         
     except Exception as e:
         print(f"Warning: Could not create database tables: {e}")
@@ -55,32 +78,51 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Cleanup on shutdown"""
+    """
+    Application shutdown event handler.
+    
+    Gracefully stops the background scheduler and cleans up resources
+    when the application is shutting down.
+    """
     try:
         scheduler_instance.stop_scheduler()
-        print("Air Quality Scheduler stopped")
+        print("✅ Background scheduler stopped gracefully")
         
     except Exception as e:
-        print(f"Warning: Error stopping services: {e}")
+        print(f"⚠️ Warning: Error stopping services: {e}")
 
-# Use the database module's get_db function directly
-# (removing duplicate definition)
+# ========================================
+# API ENDPOINTS
+# ========================================
 
-# ----------------------------------------
-# Root-Endpunkt
-# ----------------------------------------
 @app.get("/")
 def root():
-    return {"message": "WAQI Backend is running", "status": "healthy", "version": "1.0.1"}
+    """
+    Root endpoint providing basic API information.
+    
+    Returns:
+        dict: API status and version information
+    """
+    return {
+        "message": "Air Quality API - Berlin Monitoring System", 
+        "status": "healthy", 
+        "version": "1.0.0",
+        "documentation": "/docs"
+    }
 
-# ----------------------------------------
-# Health Check Endpoint (für Keep-Alive)
-# ----------------------------------------
 @app.get("/health")
 def health_check():
-    """Health check endpoint for monitoring and keep-alive"""
+    """
+    Health check endpoint for monitoring and keep-alive services.
+    
+    Verifies database connectivity and service status.
+    Used by monitoring tools and deployment platforms.
+    
+    Returns:
+        dict: Health status including database connectivity
+    """
     try:
-        # Check database connection
+        # Test database connection
         db = database.get_db_session()
         result = db.execute("SELECT 1").fetchone()
         db_status = "connected"
@@ -104,7 +146,22 @@ def health_check():
 # ----------------------------------------
 @app.get("/stations/latest")
 def get_latest_stations(limit: int = None, db: Session = Depends(database.get_db)):
-    """Get latest station data from database"""
+    """
+    Retrieve latest air quality data from all monitoring stations.
+    
+    This endpoint returns the most recent air quality measurements
+    from all stations stored in the database.
+    
+    Args:
+        limit (int, optional): Maximum number of stations to return
+        db (Session): Database session dependency
+        
+    Returns:
+        dict: Contains list of stations and total count
+        
+    Raises:
+        HTTPException: 500 if database query fails
+    """
     try:
         stations = crud.get_latest_station_data(db, limit)
         return {"stations": stations, "count": len(stations)}
@@ -113,7 +170,21 @@ def get_latest_stations(limit: int = None, db: Session = Depends(database.get_db
 
 @app.get("/stations/berlin")
 def get_berlin_stations_from_db(db: Session = Depends(database.get_db)):
-    """Get latest Berlin station data from database"""
+    """
+    Retrieve latest air quality data specifically for Berlin stations.
+    
+    This endpoint filters and returns only monitoring stations
+    located within the Berlin metropolitan area.
+    
+    Args:
+        db (Session): Database session dependency
+        
+    Returns:
+        dict: Contains Berlin stations list and count
+        
+    Raises:
+        HTTPException: 500 if database query fails
+    """
     try:
         stations = crud.get_latest_station_data_by_region(db, "Berlin")
         return {"stations": stations, "count": len(stations), "region": "Berlin"}

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="de.project.air_quality_app">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
 
     <application
@@ -34,7 +34,7 @@
         </activity>
         <meta-data
             android:name="com.mapbox.maps.token"
-            android:value="pk.eyJ1IjoiY3JhenlzYW5kbWFuIiwiYSI6ImNtYXRsZnQxNzB3NDUya3NmeTYyODVoN2EifQ.TgBXG4ljg_8PdmFXuQpxyA" />
+            android:value="${MAPBOX_ACCESS_TOKEN}" />
     </application>
 
 </manifest>

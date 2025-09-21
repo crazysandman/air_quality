@@ -1,3 +1,14 @@
+"""
+Database Models
+===============
+
+SQLAlchemy ORM models for the Air Quality monitoring system.
+Defines the database schema for storing air quality station data.
+
+Author: Master's Student Project
+Database: PostgreSQL (Supabase) with SQLite fallback
+"""
+
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, JSON
 import datetime
 
@@ -10,6 +21,12 @@ except ImportError:
     from database import Base
 
 class SensorData(Base):
+    """
+    Legacy sensor data model - kept for backward compatibility.
+    
+    Simplified model for basic air quality measurements.
+    Consider migrating to StationData model for new implementations.
+    """
     __tablename__ = "sensor_data"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -27,6 +44,27 @@ class SensorData(Base):
 
 
 class StationData(Base):
+    """
+    Main air quality station data model.
+    
+    Comprehensive model storing all air quality measurements from WAQI API.
+    Includes pollutant concentrations, weather data, and station metadata.
+    
+    Attributes:
+        id: Primary key
+        station_uid: Unique identifier from WAQI API
+        station_name: Human-readable station name
+        station_url: Direct link to station on WAQI website
+        aqi: Air Quality Index (main indicator)
+        pm25, pm10, no2, o3, co, so2: Pollutant concentrations
+        temperature, pressure, humidity, wind_speed: Weather data
+        latitude, longitude: Geographic coordinates
+        station_timestamp: Original timestamp from API
+        last_update: When record was stored in our database
+        source: Data source identifier
+        data_attribution: Attribution metadata from EPA/WAQI
+        region: Geographic region (default: Berlin)
+    """
     __tablename__ = "station_data"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -34,32 +72,32 @@ class StationData(Base):
     station_name = Column(String, index=True)
     station_url = Column(String, nullable=True)
     
-    # Luftqualität
-    aqi = Column(Integer, nullable=True)
+    # Air Quality Measurements
+    aqi = Column(Integer, nullable=True)  # Main Air Quality Index
     
-    # Schadstoffe (Individual Air Quality Index Werte)
-    pm25 = Column(Float, nullable=True)
-    pm10 = Column(Float, nullable=True)
-    no2 = Column(Float, nullable=True)
-    o3 = Column(Float, nullable=True)
-    co = Column(Float, nullable=True)
-    so2 = Column(Float, nullable=True)
+    # Pollutant Concentrations (Individual Air Quality Index values)
+    pm25 = Column(Float, nullable=True)      # Fine particulate matter (μg/m³)
+    pm10 = Column(Float, nullable=True)      # Coarse particulate matter (μg/m³)
+    no2 = Column(Float, nullable=True)       # Nitrogen dioxide (μg/m³)
+    o3 = Column(Float, nullable=True)        # Ozone (μg/m³)
+    co = Column(Float, nullable=True)        # Carbon monoxide (mg/m³)
+    so2 = Column(Float, nullable=True)       # Sulfur dioxide (μg/m³)
     
-    # Wetterdaten
-    temperature = Column(Float, nullable=True)
-    pressure = Column(Float, nullable=True)
-    humidity = Column(Float, nullable=True)
-    wind_speed = Column(Float, nullable=True)
+    # Weather Data (when available from station)
+    temperature = Column(Float, nullable=True)   # Temperature (°C)
+    pressure = Column(Float, nullable=True)      # Atmospheric pressure (hPa)
+    humidity = Column(Float, nullable=True)      # Relative humidity (%)
+    wind_speed = Column(Float, nullable=True)    # Wind speed (m/s)
     
-    # Koordinaten
-    latitude = Column(Float, nullable=False)
-    longitude = Column(Float, nullable=False)
+    # Geographic Location
+    latitude = Column(Float, nullable=False)     # Latitude coordinate
+    longitude = Column(Float, nullable=False)    # Longitude coordinate
     
-    # Zeitstempel
-    station_timestamp = Column(String, nullable=True)  # Original API timestamp
-    last_update = Column(DateTime, default=datetime.datetime.utcnow)
+    # Temporal Data
+    station_timestamp = Column(String, nullable=True)    # Original API timestamp
+    last_update = Column(DateTime, default=datetime.datetime.utcnow)  # Database insert time
     
-    # Metadaten
-    source = Column(String, default="waqi_api")
-    data_attribution = Column(JSON, nullable=True)  # EPA attribution data
-    region = Column(String, default="Berlin", index=True)
+    # Metadata
+    source = Column(String, default="waqi_api")          # Data source identifier
+    data_attribution = Column(JSON, nullable=True)       # EPA attribution data
+    region = Column(String, default="Berlin", index=True)  # Geographic region filter

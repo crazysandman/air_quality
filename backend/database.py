@@ -1,3 +1,15 @@
+"""
+Database Configuration
+=====================
+
+Database connection and session management for the Air Quality API.
+Supports PostgreSQL (primary) with SQLite fallback for development.
+
+Author: Master's Student Project
+Production DB: Supabase PostgreSQL
+Development DB: SQLite
+"""
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -10,22 +22,33 @@ except ImportError:
     # Fallback for direct execution (development)
     from config import DATABASE_URL
 
-# Create declarative base
+# SQLAlchemy declarative base for ORM models
 Base = declarative_base()
 
-# Global engine variable
+# Global database engine instance
 engine = None
 
 def initialize_database():
-    """Initialize database connection with fallback logic"""
+    """
+    Initialize database connection with intelligent fallback logic.
+    
+    Attempts to connect to PostgreSQL (Supabase) first, then falls back
+    to SQLite for local development if PostgreSQL is unavailable.
+    
+    Returns:
+        Engine: SQLAlchemy database engine instance
+        
+    Raises:
+        Exception: If both PostgreSQL and SQLite connections fail
+    """
     global engine
     
     if engine is not None:
         return engine
     
     try:
-        # Try PostgreSQL first with Railway-optimized settings
-        print(f"Attempting PostgreSQL connection to: {DATABASE_URL[:50]}...")
+        # Primary: PostgreSQL connection (Supabase/Railway)
+        print(f"🔗 Attempting PostgreSQL connection...")
         engine = create_engine(
             DATABASE_URL, 
             connect_args={
