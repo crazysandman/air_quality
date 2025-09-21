@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+import java.util.Properties
+
 android {
     namespace = "de.project.air_quality_app"
     compileSdk = 35
@@ -16,6 +18,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Mapbox API Token from local.properties
+        val localProperties = rootProject.file("local.properties")
+        if (localProperties.exists()) {
+            val properties = Properties()
+            properties.load(localProperties.inputStream())
+            val mapboxToken = properties.getProperty("MAPBOX_ACCESS_TOKEN", "")
+            manifestPlaceholders["MAPBOX_ACCESS_TOKEN"] = mapboxToken
+        }
     }
 
     buildTypes {
@@ -53,6 +64,19 @@ dependencies {
     // ViewModel and Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.compose.runtime:runtime-livedata:1.5.5")
+    
+    // Material Icons Extended for location icons
+    implementation("androidx.compose.material:material-icons-extended:1.5.5")
+    
+    // Google Play Services for Location
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.android.gms:play-services-tasks:18.0.2")
+    
+    // Coroutines integration with Play Services
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    
+    // Permissions handling
+    implementation("androidx.activity:activity-compose:1.8.2")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

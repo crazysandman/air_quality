@@ -196,3 +196,19 @@ air_quality_app_android/local.properties
 
 # Railway
 .railway/
+
+# Node.js (nur falls mal verwendet)
+node_modules/
+package-lock.json
+*.log
+npm-debug.log*
+
+# Database files (development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment files
+.env
+.env.local
+.env.production
